@@ -10,6 +10,40 @@
 
 set -euo pipefail
 
+# Check for required dependencies
+check_jq() {
+  if ! command -v jq &> /dev/null; then
+    echo "❌ jq is required but not installed"
+    echo ""
+    echo "The session-hygiene-check hook needs jq to:"
+    echo "  • Parse JSON from Claude Code"
+    echo "  • Read your transcript"
+    echo "  • Extract token counts"
+    echo "  • Parse configuration files"
+    echo ""
+    echo "Without jq, this hook will not work."
+    echo ""
+    echo "Install jq:"
+    echo "  macOS:  brew install jq"
+    echo "  Ubuntu: sudo apt-get install jq"
+    echo "  Fedora: sudo dnf install jq"
+    echo ""
+    return 1
+  fi
+  return 0
+}
+
+# Validate jq before proceeding
+if ! check_jq; then
+  read -p "Continue anyway? (y/N) " -n 1 -r
+  echo ""
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborting installation."
+    exit 1
+  fi
+  echo "⚠️  Installation proceeding without jq. The hook may not work."
+fi
+
 # Validate arguments
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <hook-name> <scope>"

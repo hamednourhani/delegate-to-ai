@@ -2,6 +2,39 @@
 
 Install Claude Code hooks with the provided `install.sh` script. Each hook can be installed **user-wide** (all projects) or **project-wide** (this project only).
 
+## Requirements
+
+### jq (required)
+
+Most hooks in this collection require **jq** (JSON query tool) to function. This is especially true for hooks that need to:
+- Parse hook input from Claude Code
+- Read your transcript file
+- Extract token counts and model information
+- Parse configuration files
+
+**Install jq:**
+
+```bash
+# macOS
+brew install jq
+
+# Ubuntu / Debian
+sudo apt-get install jq
+
+# Fedora / RHEL
+sudo dnf install jq
+
+# Alpine
+apk add jq
+```
+
+**Verify installation:**
+```bash
+jq --version
+```
+
+The installer checks for jq and warns if it's missing. Hooks may not function correctly without jq.
+
 ## Quick start
 
 ```bash
