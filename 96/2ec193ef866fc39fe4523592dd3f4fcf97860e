@@ -1,0 +1,19 @@
+hooks/INSTALL.md
+  s_20cf9113e70cc1::t_49affbe39a9332 7,24-25,27-28,31-33,35,37,40,47-51,56-57,59,61,65-67,69,73-90,92,94-96,98-100,102,104-105,107,114-115,120-121,123-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "962ec193ef866fc39fe4523592dd3f4fcf97860e",
+  "prompts": {},
+  "sessions": {
+    "s_20cf9113e70cc1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c975e033-bb86-4d4a-82b0-793e1531ea7d",
+        "model": "claude-haiku-4-5-20251001"
+      },
+      "human_author": "Hamed Nourhani <hamed.nourhani@deliveryhero.com>"
+    }
+  }
+}
