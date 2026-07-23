@@ -8,6 +8,7 @@
 
 set -euo pipefail
 
+# Default thresholds (can be overridden via settings.json)
 TURN_THRESHOLD=10
 MINUTES_THRESHOLD=10
 CONTEXT_TOKEN_THRESHOLD=120000
@@ -22,6 +23,30 @@ STATE_FILE="$STATE_DIR/${SESSION_ID}.state"
 if [ "${1:-}" = "--reset" ]; then
   rm -f "$STATE_FILE"
   exit 0
+fi
+
+# Resolve project CWD early so we can read settings before main logic
+PROJECT_CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
+PROJECT_CWD="${PROJECT_CWD:-$PWD}"
+
+# Helper to read settings from cascade (local > project > user)
+resolve_setting_value() {
+  key="$1"
+  val=""
+  for f in "$PROJECT_CWD/.claude/settings.local.json" "$PROJECT_CWD/.claude/settings.json" "$HOME/.claude/settings.json"; do
+    if [ -z "$val" ] && [ -f "$f" ]; then
+      val=$(jq -r --arg k "$key" '.[$k] // empty' "$f" 2>/dev/null || true)
+    fi
+  done
+  echo "$val"
+}
+
+# Override thresholds from settings if available
+SESSION_HYGIENE=$(resolve_setting_value sessionHygiene)
+if [ -n "$SESSION_HYGIENE" ] && [ "$SESSION_HYGIENE" != "null" ]; then
+  TURN_THRESHOLD=$(printf '%s' "$SESSION_HYGIENE" | jq -r '.turnThreshold // 10' 2>/dev/null || echo "10")
+  MINUTES_THRESHOLD=$(printf '%s' "$SESSION_HYGIENE" | jq -r '.minuteThreshold // 10' 2>/dev/null || echo "10")
+  CONTEXT_TOKEN_THRESHOLD=$(printf '%s' "$SESSION_HYGIENE" | jq -r '.contextTokenThreshold // 120000' 2>/dev/null || echo "120000")
 fi
 
 NOW=$(date +%s)
@@ -46,28 +71,6 @@ fi
 # Threshold crossed - reset the cycle and fire.
 printf 'turns=0\nbaseline=%s\n' "$NOW" > "$STATE_FILE"
 
-# Resolve through the real settings cascade (local > project > user) so a
-# per-project override isn't missed - not just the user-scope file.
-PROJECT_CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
-PROJECT_CWD="${PROJECT_CWD:-$PWD}"
-
-resolve_setting() {
-  key="$1"
-  val=""
-  # Read settings in cascade order: local override > project > user
-  # First match wins; later files ignored
-  for f in "$PROJECT_CWD/.claude/settings.local.json" "$PROJECT_CWD/.claude/settings.json" "$HOME/.claude/settings.json"; do
-    if [ -z "$val" ] && [ -f "$f" ]; then
-      val=$(jq -r --arg k "$key" '.[$k] // empty' "$f" 2>/dev/null || true)
-    fi
-  done
-  if [ -z "$val" ]; then
-    echo "unknown"
-  else
-    echo "$val"
-  fi
-}
-
 # Live model + context size: the transcript's most recent assistant entry
 # carries the model actually used for that turn (message.model) and the
 # actual running token usage (message.usage) - verified against real hook
@@ -91,7 +94,7 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
   fi
 fi
 if [ -z "$MODEL" ]; then
-  MODEL=$(resolve_setting model)
+  MODEL=$(resolve_setting_value model)
 fi
 if [ -z "$CONTEXT_TOKENS" ]; then
   CONTEXT_TOKENS="unknown"
@@ -105,7 +108,10 @@ fi
 # No per-turn signal exists for effort level anywhere in the hook input or
 # transcript - the settings cascade is the best available source, and this
 # can still lag a live /effort switch that has not been persisted yet.
-EFFORT=$(resolve_setting effortLevel)
+EFFORT=$(resolve_setting_value effortLevel)
+if [ -z "$EFFORT" ]; then
+  EFFORT="unknown"
+fi
 
 # NOTE: build via a temp file, not $(cat <<CTX ... CTX) - on macOS's stock
 # /bin/bash (3.2.57), a heredoc nested inside a $(...) command substitution
