@@ -2,21 +2,18 @@
 
 > Teaching machines to steal our jobs, one hook at a time.
 
-A collection of hooks, templates, guides, and practices for working effectively with AI tools. Currently focused on Claude Code, expanding to include other AI workflows and tools.
+A growing collection of hooks and tools for working effectively with AI. Start with what you need, add what you discover.
 
 ## What's inside
 
-- **`hooks/`** — Automation for session management, context hygiene, and workflow optimization
-- **`templates/`** — Starter configs for projects and tools (`.claude/settings.json`, `CLAUDE.md`, etc.)
-- **`guides/`** — Decision frameworks, patterns, and best practices for delegating to AI
-- **`examples/`** — Real-world setups and workflows
-- **`adr/`** — Architecture Decision Records: why we do things this way
+- **`hooks/`** — Claude Code hooks for session management, context hygiene, and workflow automation
 
 ## Getting started
 
-1. Clone or copy what you need to your project
-2. Read the relevant guide for your use case
-3. Adapt to your workflow
+1. Pick a hook you need
+2. Read its README for installation + configuration
+3. Copy to your project or user-wide hooks directory
+4. Adapt the settings to your workflow
 
 ## Current contents
 
