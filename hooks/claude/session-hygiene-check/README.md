@@ -64,6 +64,25 @@ When the threshold is crossed:
 
 The LLM decides what to say based on the guidelines (switch to Haiku, raise effort, compact, etc.).
 
+### Under the hood (for engineers)
+
+The hook outputs JSON that Claude Code uses to inject the checkpoint:
+
+```json
+{
+  "systemMessage": "🧭 Session hygiene check: 10 turns / 0m since last checkpoint (model=..., effort=low, context=~... tokens). See chat for a recommendation.",
+  "hookSpecificOutput": {
+    "hookEventName": "UserPromptSubmit",
+    "additionalContext": "SESSION HYGIENE CHECKPOINT (auto-injected, not from the user): 10 turns / 0 min have passed since the last checkpoint...\n\nBefore responding to the latest user message, take one or two sentences to size up whether the current setup still fits the work..."
+  }
+}
+```
+
+**What Claude Code does:**
+- `systemMessage` → shown in chat as a one-liner
+- `additionalContext` → sent as a system prompt to guide Claude's response
+- Claude reads both and decides what verdict to give based on the guidelines
+
 ## Example messages
 
 **Scenario 1: Simple work on Opus**
