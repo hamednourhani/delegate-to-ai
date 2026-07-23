@@ -1,0 +1,129 @@
+#!/bin/bash
+# UserPromptSubmit hook: periodically prompts Claude to judge whether the
+# current model/effortLevel still fits the work, or whether it's time to
+# /compact. Fires every N turns or M minutes since the last compact
+# (whichever comes first), then resets its own cycle.
+#
+# Reset externally (SessionStart:compact) via: session-hygiene-check --reset
+
+set -euo pipefail
+
+TURN_THRESHOLD=10
+MINUTES_THRESHOLD=10
+CONTEXT_TOKEN_THRESHOLD=120000
+
+STATE_DIR="$HOME/.claude/state/session-hygiene"
+mkdir -p "$STATE_DIR"
+
+INPUT=$(cat)
+SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
+STATE_FILE="$STATE_DIR/${SESSION_ID}.state"
+
+if [ "${1:-}" = "--reset" ]; then
+  rm -f "$STATE_FILE"
+  exit 0
+fi
+
+NOW=$(date +%s)
+
+if [ ! -f "$STATE_FILE" ]; then
+  printf 'turns=0\nbaseline=%s\n' "$NOW" > "$STATE_FILE"
+fi
+
+turns=0
+baseline=$NOW
+# shellcheck disable=SC1090
+source "$STATE_FILE"
+
+turns=$((turns + 1))
+elapsed_min=$(( (NOW - baseline) / 60 ))
+
+if [ "$turns" -lt "$TURN_THRESHOLD" ] && [ "$elapsed_min" -lt "$MINUTES_THRESHOLD" ]; then
+  printf 'turns=%s\nbaseline=%s\n' "$turns" "$baseline" > "$STATE_FILE"
+  exit 0
+fi
+
+# Threshold crossed - reset the cycle and fire.
+printf 'turns=0\nbaseline=%s\n' "$NOW" > "$STATE_FILE"
+
+# Resolve through the real settings cascade (local > project > user) so a
+# per-project override isn't missed - not just the user-scope file.
+PROJECT_CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
+PROJECT_CWD="${PROJECT_CWD:-$PWD}"
+
+resolve_setting() {
+  key="$1"
+  val=""
+  for f in "$PROJECT_CWD/.claude/settings.local.json" "$PROJECT_CWD/.claude/settings.json" "$HOME/.claude/settings.json"; do
+    if [ -z "$val" ] && [ -f "$f" ]; then
+      val=$(jq -r --arg k "$key" '.[$k] // empty' "$f" 2>/dev/null || true)
+    fi
+  done
+  if [ -z "$val" ]; then
+    echo "unknown"
+  else
+    echo "$val"
+  fi
+}
+
+# Live model + context size: the transcript's most recent assistant entry
+# carries the model actually used for that turn (message.model) and the
+# actual running token usage (message.usage) - verified against real hook
+# input (session_id, transcript_path, cwd, prompt_id, permission_mode,
+# hook_event_name, prompt; no model or usage field in the input itself, only
+# reachable via the transcript). Falls back to the settings cascade for model
+# if the transcript is unreadable or has no turns yet; context size just
+# reads as "unknown" in that case, since there is no other source for it.
+TRANSCRIPT_PATH=$(printf '%s' "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null || true)
+MODEL=""
+CONTEXT_TOKENS=""
+if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+  LAST_ASSISTANT=$(tail -n 500 "$TRANSCRIPT_PATH" 2>/dev/null | jq -c 'select(.type=="assistant")' 2>/dev/null | tail -1)
+  if [ -n "$LAST_ASSISTANT" ]; then
+    MODEL=$(printf '%s' "$LAST_ASSISTANT" | jq -r '.message.model // empty' 2>/dev/null || true)
+    CONTEXT_TOKENS=$(printf '%s' "$LAST_ASSISTANT" | jq -r '(.message.usage.cache_read_input_tokens // 0) + (.message.usage.cache_creation_input_tokens // 0) + (.message.usage.input_tokens // 0)' 2>/dev/null || true)
+  fi
+fi
+if [ -z "$MODEL" ]; then
+  MODEL=$(resolve_setting model)
+fi
+if [ -z "$CONTEXT_TOKENS" ]; then
+  CONTEXT_TOKENS="unknown"
+fi
+
+CONTEXT_SIZE_FLAG=""
+if [ "$CONTEXT_TOKENS" != "unknown" ] && [ "$CONTEXT_TOKENS" -ge "$CONTEXT_TOKEN_THRESHOLD" ]; then
+  CONTEXT_SIZE_FLAG="yes"
+fi
+
+# No per-turn signal exists for effort level anywhere in the hook input or
+# transcript - the settings cascade is the best available source, and this
+# can still lag a live /effort switch that has not been persisted yet.
+EFFORT=$(resolve_setting effortLevel)
+
+# NOTE: build via a temp file, not $(cat <<CTX ... CTX) - on macOS's stock
+# /bin/bash (3.2.57), a heredoc nested inside a $(...) command substitution
+# mis-parses any apostrophe in the body ("unexpected EOF while looking for
+# matching \`'"). Writing to a file and reading it back sidesteps the bug.
+CONTEXT_FILE=$(mktemp)
+cat <<CTX > "$CONTEXT_FILE"
+SESSION HYGIENE CHECKPOINT (auto-injected, not from the user): ${turns} turns / ${elapsed_min} min have passed since the last checkpoint on model=${MODEL}, effortLevel=${EFFORT}, context size=~${CONTEXT_TOKENS} tokens (context_size_over_threshold=${CONTEXT_SIZE_FLAG:-no}, threshold=${CONTEXT_TOKEN_THRESHOLD}). Model and context size are read live from the transcript (actual model used and actual running token usage for the last turn). effortLevel is read from settings and may lag a live /effort switch that has not been persisted yet.
+
+Before responding to the latest user message, take one or two sentences to size up whether the current setup still fits the work - give a bold, specific verdict, not a hedge or a generic tip:
+- If recent turns were simple/mechanical (reads, lookups, small edits, boilerplate) and the model is Sonnet/Opus: tell the user plainly to switch to Haiku (/model haiku).
+- If recent turns show repeated failed attempts, circular reasoning, or the user re-explaining the same thing: tell the user plainly the model/effort may be underpowered and recommend raising effortLevel or switching to a stronger model.
+- If the conversation has accumulated a lot of resolved/dead context (finished sub-tasks, long tool output no longer needed): recommend /compact.
+- If context_size_over_threshold=yes: recommend /compact on that basis alone, even if the current sub-task is still actively in progress and does not feel like dead weight - large raw tool output (file reads, diffs, long results) costs context regardless of whether the task around it is finished, so this check does not wait for "resolved/dead" context the way the bullet above does.
+- If the current setup is working well and context size is not over threshold: say so in one line and move on - do not manufacture advice just to fill this checkpoint.
+
+Start your verdict sentence with 🧭 so it stands out and is easy to find by scanning or searching back through the conversation.
+
+This checkpoint re-fires every ${TURN_THRESHOLD} turns or ${MINUTES_THRESHOLD} minutes until the user compacts.
+CTX
+CONTEXT=$(cat "$CONTEXT_FILE")
+rm -f "$CONTEXT_FILE"
+
+jq -n \
+  --arg msg "🧭 Session hygiene check: ${turns} turns / ${elapsed_min}m since last checkpoint (model=${MODEL}, effort=${EFFORT}, context=~${CONTEXT_TOKENS} tokens). See chat for a recommendation." \
+  --arg ctx "$CONTEXT" \
+  '{systemMessage: $msg, hookSpecificOutput: {hookEventName: "UserPromptSubmit", additionalContext: $ctx}}'

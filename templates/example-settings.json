@@ -1,0 +1,9 @@
+{
+  "model": "claude-opus-4-8",
+  "effortLevel": "medium",
+  "sessionHygiene": {
+    "turnThreshold": 10,
+    "minuteThreshold": 10,
+    "contextTokenThreshold": 120000
+  }
+}
