@@ -1,6 +1,6 @@
 # Delegate to AI
 
-> Teaching machines to steal our jobs, one hook at a time.
+> Teaching machines one hook at a time.
 
 A growing collection of hooks and tools for working effectively with AI. Start with what you need, add what you discover.
 
