@@ -22,6 +22,3 @@ See [hooks/INSTALL.md](hooks/INSTALL.md) for detailed installation instructions.
 **Hooks:**
 - `session-hygiene-check` — Auto-checkpoint every N turns to keep your model/effort/context in sync ([docs](hooks/claude/session-hygiene-check/README.md))
 
-## Contributing
-
-Found a hook, template, or practice that works? Add it here and share with the team.
