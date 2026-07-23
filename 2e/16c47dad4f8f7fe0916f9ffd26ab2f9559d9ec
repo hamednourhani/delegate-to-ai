@@ -1,0 +1,21 @@
+hooks/claude/session-hygiene-check/UserPromptSubmit
+  s_20cf9113e70cc1::t_a6fc0a036c5ca7 132
+  s_20cf9113e70cc1::t_8e61820c5a86da 57-58
+  s_20cf9113e70cc1::t_6c3f0894f7a457 83-84,87,89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2e16c47dad4f8f7fe0916f9ffd26ab2f9559d9ec",
+  "prompts": {},
+  "sessions": {
+    "s_20cf9113e70cc1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c975e033-bb86-4d4a-82b0-793e1531ea7d",
+        "model": "claude-haiku-4-5-20251001"
+      },
+      "human_author": "Hamed Nourhani <hamed.nourhani@deliveryhero.com>"
+    }
+  }
+}
