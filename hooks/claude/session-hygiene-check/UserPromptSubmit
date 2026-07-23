@@ -54,6 +54,8 @@ PROJECT_CWD="${PROJECT_CWD:-$PWD}"
 resolve_setting() {
   key="$1"
   val=""
+  # Read settings in cascade order: local override > project > user
+  # First match wins; later files ignored
   for f in "$PROJECT_CWD/.claude/settings.local.json" "$PROJECT_CWD/.claude/settings.json" "$HOME/.claude/settings.json"; do
     if [ -z "$val" ] && [ -f "$f" ]; then
       val=$(jq -r --arg k "$key" '.[$k] // empty' "$f" 2>/dev/null || true)
@@ -78,9 +80,13 @@ TRANSCRIPT_PATH=$(printf '%s' "$INPUT" | jq -r '.transcript_path // empty' 2>/de
 MODEL=""
 CONTEXT_TOKENS=""
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+  # Read last 500 lines (transcript is a JSONL file; most recent turns are at the end)
+  # Filter for assistant entries only, then extract the very last one
   LAST_ASSISTANT=$(tail -n 500 "$TRANSCRIPT_PATH" 2>/dev/null | jq -c 'select(.type=="assistant")' 2>/dev/null | tail -1)
   if [ -n "$LAST_ASSISTANT" ]; then
+    # Extract actual model used from the message (not from settings)
     MODEL=$(printf '%s' "$LAST_ASSISTANT" | jq -r '.message.model // empty' 2>/dev/null || true)
+    # Sum all input tokens: cache_read, cache_creation, and live input (for actual context size)
     CONTEXT_TOKENS=$(printf '%s' "$LAST_ASSISTANT" | jq -r '(.message.usage.cache_read_input_tokens // 0) + (.message.usage.cache_creation_input_tokens // 0) + (.message.usage.input_tokens // 0)' 2>/dev/null || true)
   fi
 fi
@@ -123,6 +129,7 @@ CTX
 CONTEXT=$(cat "$CONTEXT_FILE")
 rm -f "$CONTEXT_FILE"
 
+# Output hook result as JSON: systemMessage for the summary line, additionalContext for the detailed prompt
 jq -n \
   --arg msg "🧭 Session hygiene check: ${turns} turns / ${elapsed_min}m since last checkpoint (model=${MODEL}, effort=${EFFORT}, context=~${CONTEXT_TOKENS} tokens). See chat for a recommendation." \
   --arg ctx "$CONTEXT" \
