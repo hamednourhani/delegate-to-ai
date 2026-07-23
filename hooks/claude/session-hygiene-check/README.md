@@ -20,21 +20,15 @@ This hook catches drift by asking periodically: "Is your current setup still rig
 
 ## Installation
 
-### Option 1: Copy to your local Claude Code hooks (user-wide)
+From the `hooks/` directory, run:
 
 ```bash
-cp UserPromptSubmit ~/.claude/hooks/UserPromptSubmit
+./install.sh session-hygiene-check
 ```
 
-Now it runs for all your Claude Code sessions.
+This installs to `~/.claude/hooks/UserPromptSubmit` and runs for all your Claude Code sessions.
 
-### Option 2: Copy to your project (project-specific)
-
-```bash
-cp UserPromptSubmit .claude/hooks/UserPromptSubmit
-```
-
-Now it runs only for this project (project settings override user settings).
+See [../INSTALL.md](../INSTALL.md) for detailed instructions and troubleshooting.
 
 ## Configuration
 
@@ -46,23 +40,7 @@ MINUTES_THRESHOLD=10       # Or every M minutes (whichever comes first)
 CONTEXT_TOKEN_THRESHOLD=120000  # Recommend /compact if over this
 ```
 
-### Change thresholds per-project
-
-Add to `.claude/settings.json`:
-
-```json
-{
-  "sessionHygiene": {
-    "turnThreshold": 15,
-    "minuteThreshold": 5,
-    "contextTokenThreshold": 100000
-  }
-}
-```
-
-(Or edit the hardcoded values in the script if you prefer.)
-
-### Change thresholds globally
+### Change thresholds
 
 Add to `~/.claude/settings.json`:
 

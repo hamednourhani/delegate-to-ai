@@ -1,7 +1,0 @@
-{
-  "sessionHygiene": {
-    "turnThreshold": 8,
-    "minuteThreshold": 5,
-    "contextTokenThreshold": 100000
-  }
-}

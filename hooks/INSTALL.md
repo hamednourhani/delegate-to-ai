@@ -1,6 +1,6 @@
 # Hook Installation Guide
 
-Install Claude Code hooks with the provided `install.sh` script. Each hook can be installed **user-wide** (all projects) or **project-wide** (this project only).
+Install Claude Code hooks to `~/.claude/hooks/` with the provided `install.sh` script. Each user installs once on their machine.
 
 ## Requirements
 
@@ -25,20 +25,15 @@ apk add jq
 
 ```bash
 cd hooks/
-./install.sh <hook-name> <scope>
+./install.sh <hook-name>
 ```
 
 **Arguments:**
 - `<hook-name>`: Hook to install (e.g., `session-hygiene-check`)
-- `<scope>`: `user` for `~/.claude/hooks/` or `project` for `.claude/hooks/`
 
-**Examples:**
+**Example:**
 ```bash
-# Install to user-wide hooks (all projects)
-./install.sh session-hygiene-check user
-
-# Install to project-wide hooks (this project only)
-./install.sh session-hygiene-check project
+./install.sh session-hygiene-check
 ```
 
 ## How it works
@@ -46,7 +41,7 @@ cd hooks/
 The installer:
 1. **Checks for jq** — warns if missing
 2. **Validates the hook** — checks if it exists
-3. **Creates hooks directory** — `~/.claude/hooks/` or `.claude/hooks/` if needed
+3. **Creates `~/.claude/hooks/`** — if it doesn't exist
 4. **Symlinks the hook** — creates a symlink (not a copy)
 5. **Auto-updates** — hook updates when you `git pull` this repo
 
@@ -56,27 +51,9 @@ The installer:
   - [Configuration →](claude/session-hygiene-check/README.md)
   - [Design rationale →](claude/session-hygiene-check/DESIGN.md)
 
-## Scope: User-wide vs Project-wide
-
-### User-wide (`user`)
-```bash
-./install.sh session-hygiene-check user
-```
-- Hook runs for **all your Claude Code sessions**, across all projects
-- Installed at `~/.claude/hooks/UserPromptSubmit`
-- One install, used everywhere
-
-### Project-wide (`project`)
-```bash
-./install.sh session-hygiene-check project
-```
-- Hook runs **only for this project** (overrides user-wide if both exist)
-- Installed at `.claude/hooks/UserPromptSubmit`
-- Project-specific configuration
-
 ## Configuration
 
-Each hook may have its own configuration via `.claude/settings.json`. See the hook's README for details.
+Each hook reads configuration from `~/.claude/settings.json`. See the hook's README for available settings.
 
 Example:
 ```json
@@ -92,11 +69,7 @@ Example:
 ## Uninstall
 
 ```bash
-# User-wide
 rm ~/.claude/hooks/UserPromptSubmit
-
-# Project-wide
-rm .claude/hooks/UserPromptSubmit
 ```
 
 ## Troubleshooting
@@ -108,13 +81,13 @@ Available hooks are listed in `hooks/claude/`. Add new hooks in that directory.
 You have a regular file, not a symlink. Remove it and reinstall:
 ```bash
 rm ~/.claude/hooks/UserPromptSubmit
-./install.sh session-hygiene-check user
+./install.sh session-hygiene-check
 ```
 
 ### "Symlink broken after moving the repo"
 Symlinks use absolute paths. After moving the repo, reinstall:
 ```bash
-./install.sh session-hygiene-check user
+./install.sh session-hygiene-check
 ```
 
 ### "Hook not firing"

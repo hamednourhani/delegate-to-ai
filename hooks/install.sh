@@ -1,12 +1,10 @@
 #!/bin/bash
-# Hook installer: symlinks hooks to user or project hooks directory
-# Usage: ./install.sh <hook-name> <scope>
+# Hook installer: symlinks hooks to user hooks directory
+# Usage: ./install.sh <hook-name>
 #   <hook-name>: name of the hook to install (e.g., session-hygiene-check)
-#   <scope>: "user" for ~/.claude/hooks/ or "project" for .claude/hooks/
 #
-# Examples:
-#   ./install.sh session-hygiene-check user
-#   ./install.sh session-hygiene-check project
+# Example:
+#   ./install.sh session-hygiene-check
 
 set -euo pipefail
 
@@ -45,21 +43,18 @@ if ! check_jq; then
 fi
 
 # Validate arguments
-if [ $# -ne 2 ]; then
-  echo "Usage: $0 <hook-name> <scope>"
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <hook-name>"
   echo ""
   echo "Arguments:"
   echo "  <hook-name>: name of the hook (e.g., session-hygiene-check)"
-  echo "  <scope>:     'user' for ~/.claude/hooks/ or 'project' for .claude/hooks/"
   echo ""
-  echo "Examples:"
-  echo "  $0 session-hygiene-check user"
-  echo "  $0 session-hygiene-check project"
+  echo "Example:"
+  echo "  $0 session-hygiene-check"
   exit 1
 fi
 
 HOOK_NAME="$1"
-SCOPE="$2"
 
 # Validate hook exists
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -72,22 +67,8 @@ if [ ! -f "$HOOK_SRC" ]; then
   exit 1
 fi
 
-# Determine destination based on scope
-case "$SCOPE" in
-  user)
-    HOOKS_DIR="$HOME/.claude/hooks"
-    SCOPE_NAME="user-wide"
-    ;;
-  project)
-    HOOKS_DIR=".claude/hooks"
-    SCOPE_NAME="project-wide"
-    ;;
-  *)
-    echo "❌ Invalid scope: $SCOPE"
-    echo "Use 'user' or 'project'"
-    exit 1
-    ;;
-esac
+# Install to user hooks directory
+HOOKS_DIR="$HOME/.claude/hooks"
 
 # Create hooks directory if it doesn't exist
 if [ ! -d "$HOOKS_DIR" ]; then
@@ -108,12 +89,12 @@ if [ -L "$HOOK_DST" ]; then
   rm "$HOOK_DST"
 fi
 
-# Create new symlink with absolute path (more robust)
+# Create new symlink with absolute path
 ln -s "$HOOK_SRC" "$HOOK_DST"
 
 # Verify
 if [ -L "$HOOK_DST" ]; then
-  echo "✅ $HOOK_NAME installed ($SCOPE_NAME)"
+  echo "✅ $HOOK_NAME installed"
   echo "   Symlink: $HOOK_DST → $HOOK_SRC"
 else
   echo "❌ Installation failed"
