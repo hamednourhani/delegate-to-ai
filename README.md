@@ -10,14 +10,17 @@ A growing collection of hooks and tools for working effectively with AI. Start w
 
 ## Getting started
 
-1. Pick a hook you need
-2. Read its README for installation + configuration
-3. Copy to your project or user-wide hooks directory
+1. Go to `hooks/` directory
+2. Run the installer: `./install.sh <hook-name> <scope>`
+3. Read the hook's README for configuration
 4. Adapt the settings to your workflow
+
+See [hooks/INSTALL.md](hooks/INSTALL.md) for detailed installation instructions.
 
 ## Current contents
 
-- **Session Hygiene Hook** (`hooks/claude/session-hygiene-check`) — Auto-checkpoint every N turns to keep your model/effort/context in sync
+**Hooks:**
+- `session-hygiene-check` — Auto-checkpoint every N turns to keep your model/effort/context in sync ([docs](hooks/claude/session-hygiene-check/README.md))
 
 ## Contributing
 
