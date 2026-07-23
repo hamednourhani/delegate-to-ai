@@ -1,0 +1,26 @@
+.claude/settings.json
+  s_20cf9113e70cc1::t_2cb61b5ea3fdbf 1-9
+hooks/claude/session-hygiene-check/UserPromptSubmit
+  s_20cf9113e70cc1::t_07ab38b88b6ec4 97
+  s_20cf9113e70cc1::t_7fcd272fed73db 50,111-114
+  s_20cf9113e70cc1::t_e5d8047d9c9372 11,28-49
+  s_20cf9113e70cc1::t_a79d9886e92bbc 51
+.claude/hooks/UserPromptSubmit
+  s_20cf9113e70cc1::t_7668dd56dbb6ad 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "05b5bf69708b90ad3aff62d1b66a72f5838fb6c7",
+  "prompts": {},
+  "sessions": {
+    "s_20cf9113e70cc1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c975e033-bb86-4d4a-82b0-793e1531ea7d",
+        "model": "claude-haiku-4-5-20251001"
+      },
+      "human_author": "Hamed Nourhani <hamed.nourhani@deliveryhero.com>"
+    }
+  }
+}
