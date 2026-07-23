@@ -1,0 +1,22 @@
+hooks/install.sh
+  s_20cf9113e70cc1::t_7bdc72b842dd2e 13-46
+hooks/INSTALL.md
+  s_20cf9113e70cc1::t_b6899f441f2c2d 5-8,11-35,37
+  s_20cf9113e70cc1::t_eeb2142f36ec2a 9-10,36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f476667acfb4335e81b7d51c3c798a905a8c18a4",
+  "prompts": {},
+  "sessions": {
+    "s_20cf9113e70cc1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c975e033-bb86-4d4a-82b0-793e1531ea7d",
+        "model": "claude-haiku-4-5-20251001"
+      },
+      "human_author": "Hamed Nourhani <hamed.nourhani@deliveryhero.com>"
+    }
+  }
+}
