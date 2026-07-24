@@ -1,0 +1,23 @@
+hooks/install.sh
+  s_2a634b0089e6e2::t_d30f76aa2e71c1 128-135,142-146,150,156-168,170-171
+  s_2a634b0089e6e2::t_c34016e6cc2bec 2-3,9-14,18-30,36-37,40,60,78,80,87-96,98-104,110-112,114-115,118-119,123-125,136-139,148-149,152-153,173-193,195-196
+  s_2a634b0089e6e2::t_033dab66e0bddd 113,117,120-121,126,140-141,147,151,154-155,169,172,194
+hooks/INSTALL.md
+  s_2a634b0089e6e2::t_b7ef6756b478b4 46-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "5ca2b2dc5e6c3d7f8c38091b56486fa44447a163",
+  "prompts": {},
+  "sessions": {
+    "s_2a634b0089e6e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abe3a817-0355-488b-a5a7-eac1b30e8156",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Hamed Nourhani <h.nourhani@deliveryhero.com>"
+    }
+  }
+}
