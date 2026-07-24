@@ -43,7 +43,8 @@ The installer:
 2. **Validates the hook** — checks if it exists
 3. **Creates `~/.claude/hooks/`** — if it doesn't exist
 4. **Symlinks the hook** — creates a symlink (not a copy)
-5. **Auto-updates** — hook updates when you `git pull` this repo
+5. **Registers it in `~/.claude/settings.json`** — adds a `UserPromptSubmit` entry pointing at the symlink; without this, Claude Code never invokes the hook, even though the file exists
+6. **Auto-updates** — hook updates when you `git pull` this repo
 
 ## Available hooks
 
